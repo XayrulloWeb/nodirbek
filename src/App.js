@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue } from "firebase/database";
 import './App.css';
 
-// --- КОНФИГУРАЦИЯ FIREBASE ---
+// --- FIREBASE CONFIG ---
 const firebaseConfig = {
   apiKey: "AIzaSyCboYDC9dCLIYNORBXagy5iLGiGjp_cxaE",
   authDomain: "test-e6304.firebaseapp.com",
@@ -18,7 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --- КОМПОНЕНТ КАРТОЧКИ ---
+// --- SENSOR CARD COMPONENT ---
 const SensorCard = ({ title, value, unit, icon, color, sub, type }) => (
   <div className={`sensor-card ${type}`} style={{ '--accent-color': color }}>
     <div className="card-bg-glow"></div>
@@ -36,7 +36,7 @@ const SensorCard = ({ title, value, unit, icon, color, sub, type }) => (
   </div>
 );
 
-// --- ИКОНКИ (SVG) ---
+// --- ICONS (SVG) ---
 const Icons = {
   Temp: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>,
   Hum: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>,
@@ -46,11 +46,11 @@ const Icons = {
 
 function App() {
   const [realData, setRealData] = useState({ temp: '--', hum: '--' });
-  const [fakeData, setFakeData] = useState({ pressure: 760, oxygen: 21.0 });
+  const [fakeData, setFakeData] = useState({ pressure: 760, oxygen: 25.0 }); // increased oxygen
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date().toLocaleTimeString());
 
-  // Часы
+  // Clock
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
@@ -74,7 +74,7 @@ function App() {
     const interval = setInterval(() => {
       setFakeData({
         pressure: Math.floor(Math.random() * (762 - 758 + 1)) + 758,
-        oxygen: (Math.random() * (21.2 - 20.8) + 20.8).toFixed(1)
+        oxygen: (Math.random() * (25.0 - 24.5) + 24.5).toFixed(1) // higher fake oxygen
       });
     }, 3000);
     return () => clearInterval(interval);
@@ -82,7 +82,7 @@ function App() {
 
   return (
     <div className="app-wrapper">
-      {/* Фоновые эффекты */}
+      {/* Background effects */}
       <div className="bg-blob blob-1"></div>
       <div className="bg-blob blob-2"></div>
       <div className="bg-grid"></div>
@@ -95,53 +95,53 @@ function App() {
             </span>
             <span className="time-display">{time}</span>
           </div>
-          <p className="subtitle">Maktab Monitoring Sistemasi</p>
+          <p className="subtitle">School Monitoring System</p>
         </header>
 
         {loading ? (
           <div className="loader-container">
             <div className="spinner"></div>
-            <p>Связь со спутником...</p>
+            <p>Connecting to satellite...</p>
           </div>
         ) : (
           <div className="dashboard-grid">
             <SensorCard 
-              title="Temperatura" 
+              title="Temperature" 
               value={realData.temp} 
               unit="°C" 
               icon={Icons.Temp} 
               color="#ff4b1f"
-              sub="Датчик DHT22 (Real)"
+              sub="DHT22 Sensor (Real)"
               type="primary"
             />
             
             <SensorCard 
-              title="Namlik" 
+              title="Humidity" 
               value={realData.hum} 
               unit="%" 
               icon={Icons.Hum} 
               color="#1fddff"
-              sub="Датчик DHT22 (Real)"
+              sub="DHT22 Sensor (Real)"
               type="primary"
             />
 
             <SensorCard 
-              title="Davleniya" 
+              title="Pressure" 
               value={fakeData.pressure} 
-              unit="мм" 
+              unit="mmHg" 
               icon={Icons.Press} 
               color="#a8ff78"
-              sub="Барометр (Sim)"
+              sub="Barometer (Simulated)"
               type="secondary"
             />
 
             <SensorCard 
-              title="Kislorod" 
+              title="Oxygen" 
               value={fakeData.oxygen} 
               unit="%" 
               icon={Icons.Oxy} 
               color="#fbd786"
-              sub="Анализатор (Sim)"
+              sub="Analyzer (Simulated)"
               type="secondary"
             />
           </div>
