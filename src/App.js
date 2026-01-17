@@ -95,7 +95,7 @@ function App() {
             </span>
             <span className="time-display">{time}</span>
           </div>
-          <p className="subtitle">School Monitoring System</p>
+          <p className="subtitle">Smart school guardian</p>
         </header>
 
         {loading ? (
