@@ -35,12 +35,12 @@ const SensorCard = ({ title, value, unit, icon, color, sub, type }) => (
 const Icons = {
   Temp: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>,
   Hum: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>,
-  Oxy: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1 2.96-3.08 3 3 0 0 1-.3-1.6 2.5 2.5 0 0 1-1-4.92V4.5A2.5 2.5 0 0 1 9.5 2z"></path><path d="M14.5 2A2.5 2.5 0 0 1 17 4.5v15a2.5 2.5 0 0 1-5 0v-15A2.5 2.5 0 0 1 14.5 2z"></path></svg>
+  Carbon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 9.5a4 4 0 1 0 0 5"></path></svg>
 };
 
 function App() {
   const [realData, setRealData] = useState({ temp: '--', hum: '--' });
-  const [oxygenData, setOxygenData] = useState(20.9);
+  const [carbonData, setCarbonData] = useState(420);
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date().toLocaleTimeString());
 
@@ -61,13 +61,13 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Realistic oxygen simulation (indoor normal range is around 20.9%).
+  // Realistic CO2 simulation for indoor air quality in ppm.
   useEffect(() => {
     const interval = setInterval(() => {
-      setOxygenData((prev) => {
-        const drift = (Math.random() - 0.5) * 0.08;
-        const next = Math.min(21.2, Math.max(20.4, prev + drift));
-        return Number(next.toFixed(1));
+      setCarbonData((prev) => {
+        const drift = Math.round((Math.random() - 0.5) * 40);
+        const next = Math.min(900, Math.max(380, prev + drift));
+        return next;
       });
     }, 4000);
     return () => clearInterval(interval);
@@ -119,12 +119,12 @@ function App() {
             />
 
             <SensorCard
-              title="Kislorod"
-              value={realData.oxygen ?? oxygenData}
-              unit="%"
-              icon={Icons.Oxy}
+              title="Karbon angidrid"
+              value={realData.co2 ?? realData.carbon ?? carbonData}
+              unit="ppm"
+              icon={Icons.Carbon}
               color="#7de2d1"
-              sub={realData.oxygen ? "Sensor (haqiqiy)" : "Hisoblangan ()"}
+              sub={realData.co2 ?? realData.carbon ? "Sensor (haqiqiy)" : "Hisoblangan (ppm)"}
               type="secondary"
             />
           </div>
