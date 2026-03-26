@@ -17,6 +17,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const toNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const co2ToAirQuality = (co2Value) => {
+  if (co2Value == null) {
+    return null;
+  }
+
+  const normalized = 100 - ((co2Value - 400) / 14);
+  return Math.round(clamp(normalized, 42, 99));
+};
+
+const getNextAirQualityTarget = (current) => {
+  const baseDrift = (Math.random() - 0.5) * 4;
+  const dip = Math.random() < 0.22 ? -(3 + Math.random() * 6) : 0;
+  const recovery = Math.random() < 0.18 ? 2 + Math.random() * 4 : 0;
+
+  return Math.round(clamp(current + baseDrift + dip + recovery, 78, 99));
+};
+
 const SensorCard = ({ title, value, unit, icon, color, sub, type }) => (
   <div className={`sensor-card ${type}`} style={{ '--accent-color': color }}>
     <div className="card-bg-glow"></div>
@@ -40,7 +64,8 @@ const Icons = {
 
 function App() {
   const [realData, setRealData] = useState({ temp: '--', hum: '--' });
-  const [carbonData, setCarbonData] = useState(420);
+  const [airQualityTarget, setAirQualityTarget] = useState(96);
+  const [airQualityValue, setAirQualityValue] = useState(96);
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date().toLocaleTimeString());
 
@@ -61,17 +86,60 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Realistic CO2 simulation for indoor air quality in ppm.
+  useEffect(() => {
+    const sensorPercent = toNumber(
+      realData.airQuality ?? realData.air_quality ?? realData.co2_percent ?? realData.carbon_percent
+    );
+    const sensorCo2 = toNumber(realData.co2 ?? realData.carbon);
+
+    if (sensorPercent !== null) {
+      setAirQualityTarget(Math.round(clamp(sensorPercent, 0, 100)));
+      return;
+    }
+
+    if (sensorCo2 !== null) {
+      setAirQualityTarget(co2ToAirQuality(sensorCo2));
+    }
+  }, [realData]);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setCarbonData((prev) => {
-        const drift = Math.round((Math.random() - 0.5) * 40);
-        const next = Math.min(900, Math.max(380, prev + drift));
-        return next;
+      setAirQualityValue((prev) => {
+        const difference = airQualityTarget - prev;
+
+        if (Math.abs(difference) < 0.35) {
+          return airQualityTarget;
+        }
+
+        const step = difference * 0.28 + (Math.random() - 0.5) * 0.45;
+        const nextValue = prev + step;
+        return Number(clamp(nextValue, 0, 100).toFixed(1));
       });
-    }, 4000);
+    }, 900);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [airQualityTarget]);
+
+  useEffect(() => {
+    const sensorPercent = toNumber(
+      realData.airQuality ?? realData.air_quality ?? realData.co2_percent ?? realData.carbon_percent
+    );
+    const sensorCo2 = toNumber(realData.co2 ?? realData.carbon);
+
+    if (sensorPercent !== null || sensorCo2 !== null) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setAirQualityTarget((prev) => getNextAirQualityTarget(prev));
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [realData]);
+
+  const hasLiveAirQuality =
+    toNumber(realData.airQuality ?? realData.air_quality ?? realData.co2_percent ?? realData.carbon_percent) !== null ||
+    toNumber(realData.co2 ?? realData.carbon) !== null;
 
   return (
     <div className="app-wrapper">
@@ -101,7 +169,7 @@ function App() {
             <SensorCard
               title="Harorat"
               value={realData.temp}
-              unit="°C"
+              unit={"\u00B0C"}
               icon={Icons.Temp}
               color="#ff4b1f"
               sub="DHT22 sensori (haqiqiy)"
@@ -119,12 +187,12 @@ function App() {
             />
 
             <SensorCard
-              title="Karbon angidrid"
-              value={realData.co2 ?? realData.carbon ?? carbonData}
-              unit="ppm"
+              title="Havo sifati"
+              value={Math.round(airQualityValue)}
+              unit="%"
               icon={Icons.Carbon}
               color="#7de2d1"
-              sub={realData.co2 ?? realData.carbon ? "Sensor (haqiqiy)" : "Hisoblangan (ppm)"}
+              sub={hasLiveAirQuality ? "Sensor asosida (haqiqiy)" : "Dinamik hisoblangan (foiz)"}
               type="secondary"
             />
           </div>
