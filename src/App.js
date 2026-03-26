@@ -91,64 +91,64 @@ function App() {
         <header>
           <div className="header-top">
             <span className="live-badge">
-              <span className="pulse-dot"></span> LIVE
+              <span className="pulse-dot"></span> JONLI
             </span>
             <span className="time-display">{time}</span>
           </div>
-          <p className="subtitle">Smart school guardian</p>
+          <p className="subtitle">Aqlli maktab nazorati</p>
         </header>
 
         {loading ? (
           <div className="loader-container">
             <div className="spinner"></div>
-            <p>Connecting to satellite...</p>
+            <p>Sensorlarga ulanmoqda...</p>
           </div>
         ) : (
           <div className="dashboard-grid">
-            <SensorCard 
-              title="Temperature" 
-              value={realData.temp} 
-              unit="°C" 
-              icon={Icons.Temp} 
+            <SensorCard
+              title="Harorat"
+              value={realData.temp}
+              unit="C"
+              icon={Icons.Temp}
               color="#ff4b1f"
-              sub="DHT22 Sensor (Real)"
-              type="primary"
-            />
-            
-            <SensorCard 
-              title="Humidity" 
-              value={realData.hum} 
-              unit="%" 
-              icon={Icons.Hum} 
-              color="#1fddff"
-              sub="DHT22 Sensor (Real)"
+              sub="DHT22 sensori (haqiqiy)"
               type="primary"
             />
 
-            <SensorCard 
-              title="Pressure" 
-              value={fakeData.pressure} 
-              unit="mmHg" 
-              icon={Icons.Press} 
+            <SensorCard
+              title="Namlik"
+              value={realData.hum}
+              unit="%"
+              icon={Icons.Hum}
+              color="#1fddff"
+              sub="DHT22 sensori (haqiqiy)"
+              type="primary"
+            />
+
+            <SensorCard
+              title="Bosim"
+              value={fakeData.pressure}
+              unit="mmHg"
+              icon={Icons.Press}
               color="#a8ff78"
-              sub="Barometer (Simulated)"
+              sub="Barometr (simulyatsiya)"
               type="secondary"
             />
 
-            <SensorCard 
-              title="Oxygen" 
-              value={fakeData.oxygen} 
-              unit="%" 
-              icon={Icons.Oxy} 
+            <SensorCard
+              title="Kislorod"
+              value={fakeData.oxygen}
+              unit="%"
+              icon={Icons.Oxy}
               color="#fbd786"
-              sub="Analyzer (Simulated)"
+              sub="Analizator (simulyatsiya)"
               type="secondary"
             />
           </div>
         )}
 
         <footer>
-          <p>System ID: E6304 • Secure Connection</p>
+          <p>Tizim ID: E6304 - Xavfsiz ulanish</p>
         </footer>
       </div>
     </div>

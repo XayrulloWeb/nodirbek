@@ -9,20 +9,20 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Smart Room Monitor',
-        short_name: 'SmartRoom',
-        description: 'ESP32 IoT Monitor',
+        name: 'Aqlli Xona Monitori',
+        short_name: 'AqlliXona',
+        description: 'ESP32 asosidagi IoT monitoring',
         theme_color: '#1a1a2e',
         background_color: '#1a1a2e',
-        display: 'standalone', // Убирает интерфейс браузера (выглядит как приложение)
+        display: 'standalone',
         icons: [
           {
-            src: '/android-chrome-192x192.png', // Тебе нужно будет положить картинку 192x192 в папку public
+            src: '/android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/android-chrome-512x512.png', // И картинку 512x512 в папку public
+            src: '/android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }
