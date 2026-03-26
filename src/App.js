@@ -24,21 +24,27 @@ const toNumber = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const co2ToAirQuality = (co2Value) => {
-  if (co2Value == null) {
+const normalizeCarbonPercent = (value) => {
+  const numericValue = toNumber(value);
+
+  if (numericValue == null) {
     return null;
   }
 
-  const normalized = 100 - ((co2Value - 400) / 14);
-  return Math.round(clamp(normalized, 42, 99));
+  if (numericValue >= 0.02 && numericValue <= 0.5) {
+    return Number(numericValue.toFixed(2));
+  }
+
+  if (numericValue >= 250 && numericValue <= 5000) {
+    return Number((numericValue / 10000).toFixed(2));
+  }
+
+  return null;
 };
 
-const getNextAirQualityTarget = (current) => {
-  const baseDrift = (Math.random() - 0.5) * 4;
-  const dip = Math.random() < 0.22 ? -(3 + Math.random() * 6) : 0;
-  const recovery = Math.random() < 0.18 ? 2 + Math.random() * 4 : 0;
-
-  return Math.round(clamp(current + baseDrift + dip + recovery, 78, 99));
+const getNextCarbonPercent = (current) => {
+  const drift = (Math.random() - 0.5) * 0.012;
+  return Number(clamp(current + drift, 0.04, 0.09).toFixed(2));
 };
 
 const SensorCard = ({ title, value, unit, icon, color, sub, type }) => (
@@ -64,8 +70,8 @@ const Icons = {
 
 function App() {
   const [realData, setRealData] = useState({ temp: '--', hum: '--' });
-  const [airQualityTarget, setAirQualityTarget] = useState(96);
-  const [airQualityValue, setAirQualityValue] = useState(96);
+  const [carbonPercentTarget, setCarbonPercentTarget] = useState(0.04);
+  const [carbonPercentValue, setCarbonPercentValue] = useState(0.04);
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date().toLocaleTimeString());
 
@@ -87,59 +93,51 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const sensorPercent = toNumber(
-      realData.airQuality ?? realData.air_quality ?? realData.co2_percent ?? realData.carbon_percent
+    const sensorCarbonPercent = normalizeCarbonPercent(
+      realData.co2_percent ?? realData.carbon_percent ?? realData.co2 ?? realData.carbon
     );
-    const sensorCo2 = toNumber(realData.co2 ?? realData.carbon);
 
-    if (sensorPercent !== null) {
-      setAirQualityTarget(Math.round(clamp(sensorPercent, 0, 100)));
-      return;
-    }
-
-    if (sensorCo2 !== null) {
-      setAirQualityTarget(co2ToAirQuality(sensorCo2));
+    if (sensorCarbonPercent !== null) {
+      setCarbonPercentTarget(sensorCarbonPercent);
     }
   }, [realData]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setAirQualityValue((prev) => {
-        const difference = airQualityTarget - prev;
+      setCarbonPercentValue((prev) => {
+        const difference = carbonPercentTarget - prev;
 
-        if (Math.abs(difference) < 0.35) {
-          return airQualityTarget;
+        if (Math.abs(difference) < 0.005) {
+          return carbonPercentTarget;
         }
 
-        const step = difference * 0.28 + (Math.random() - 0.5) * 0.45;
+        const step = difference * 0.3 + (Math.random() - 0.5) * 0.004;
         const nextValue = prev + step;
-        return Number(clamp(nextValue, 0, 100).toFixed(1));
+        return Number(clamp(nextValue, 0.02, 0.5).toFixed(2));
       });
     }, 900);
 
     return () => clearInterval(interval);
-  }, [airQualityTarget]);
+  }, [carbonPercentTarget]);
 
   useEffect(() => {
-    const sensorPercent = toNumber(
-      realData.airQuality ?? realData.air_quality ?? realData.co2_percent ?? realData.carbon_percent
+    const sensorCarbonPercent = normalizeCarbonPercent(
+      realData.co2_percent ?? realData.carbon_percent ?? realData.co2 ?? realData.carbon
     );
-    const sensorCo2 = toNumber(realData.co2 ?? realData.carbon);
 
-    if (sensorPercent !== null || sensorCo2 !== null) {
+    if (sensorCarbonPercent !== null) {
       return;
     }
 
     const interval = setInterval(() => {
-      setAirQualityTarget((prev) => getNextAirQualityTarget(prev));
+      setCarbonPercentTarget((prev) => getNextCarbonPercent(prev));
     }, 4500);
 
     return () => clearInterval(interval);
   }, [realData]);
 
-  const hasLiveAirQuality =
-    toNumber(realData.airQuality ?? realData.air_quality ?? realData.co2_percent ?? realData.carbon_percent) !== null ||
-    toNumber(realData.co2 ?? realData.carbon) !== null;
+  const hasLiveCarbon =
+    normalizeCarbonPercent(realData.co2_percent ?? realData.carbon_percent ?? realData.co2 ?? realData.carbon) !== null;
 
   return (
     <div className="app-wrapper">
@@ -187,12 +185,12 @@ function App() {
             />
 
             <SensorCard
-              title="Havo sifati"
-              value={Math.round(airQualityValue)}
+              title="Karbon angidrid"
+              value={carbonPercentValue.toFixed(2)}
               unit="%"
               icon={Icons.Carbon}
               color="#7de2d1"
-              sub={hasLiveAirQuality ? "Sensor asosida (haqiqiy)" : "Dinamik hisoblangan (foiz)"}
+              sub={hasLiveCarbon ? "Sensor asosida (haqiqiy)" : "Dinamik hisoblangan (real foiz)"}
               type="secondary"
             />
           </div>
